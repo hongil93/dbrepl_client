@@ -150,6 +150,7 @@ void type_categorizer(Packet packet, int fd){
         char *Last_IO_Error;
         char *Last_SQL_Errno;
         char *Last_SQL_Error;
+        char *replication_status;
 
         char *token = strtok(packet.buf, ",");
 
@@ -183,16 +184,25 @@ void type_categorizer(Packet packet, int fd){
         if(token != NULL){
             Last_SQL_Error = token;
         }
-        system("clear"); // screen clear
 
-        printf("=======================================\n");
+        if((strcmp(slave_io_running, "Yes") == 0) && (strcmp(slave_sql_running, "Yes") == 0))
+        {
+            replication_status = "정상";
+        }else{
+            replication_status = "실패";
+        }
+        
+        system("clear"); // screen clear
+        printf("=============DB 이중화 상태=============\n");
+        printf("\t\t  %s\n", replication_status);
+        printf("================전체 상태===============\n");
         printf("\tSlave_IO_Running: %s\n", slave_io_running);
         printf("\tSlave_SQL_Running: %s\n", slave_sql_running);
         printf("\tLast_IO_Errno: %s\n", Last_IO_Errno);
         printf("\tLast_IO_Error: %s\n", Last_IO_Error);
         printf("\tLast_SQL_Errno: %s\n", Last_SQL_Errno);
         printf("\tLast_SQL_Error: %s\n", Last_SQL_Error);
-        printf("=======================================\n\n");
+        printf("========================================\n\n");
 
         fflush(stdout); // buffer
     }
