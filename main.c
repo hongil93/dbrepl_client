@@ -11,6 +11,7 @@
 #define INPUT_SIZE 100
 
 #define SQL_SELECT 101
+#define REP_CHECK 201
 #define EVT_WARNING 400
 #define EVT_ERROR 401
 
@@ -57,6 +58,7 @@ void menu() {
 	while (1) {
         printf("<Select menu>\n");
         printf("1. Select All\n");
+        printf("2. show replication status\n");
         printf("99. quit\n");
 
         printf("select number:");
@@ -85,19 +87,20 @@ void menu() {
         printf("\n");
 
 		switch (num) {
-		case 1:
-			send_packet(sock_info.fd, SQL_SELECT, "\n");
-            sleep(1);
-			break;
-		case 2:
-			break;
-		case 3:
-			break;
-		case 4:
-			break;
-		case 99:
-			return;
-
+            case 1:
+                send_packet(sock_info.fd, SQL_SELECT, "\n");
+                sleep(1);
+                break;
+            case 2:
+                send_packet(sock_info.fd, REP_CHECK, "\n");
+                sleep(1);
+                break;
+            case 3:
+                break;
+            case 4:
+                break;
+            case 99:
+                return;
 		}
 		printf(" ------------------------------- \n");
 
@@ -137,7 +140,7 @@ int connect_to_server()
 	memset(&serv_adr, 0, sizeof(serv_adr));
 	serv_adr.sin_family=AF_INET;
 	serv_adr.sin_addr.s_addr=inet_addr("10.0.2.4");
-	serv_adr.sin_port=htons(4444);
+	serv_adr.sin_port=htons(9999);
 
 	if(connect(sock, (struct sockaddr*)&serv_adr, sizeof(serv_adr))==-1)
 		error_handling("connect() error!");
@@ -194,6 +197,28 @@ void type_categorizer(Packet packet, int fd){
 		case SQL_SELECT:
 			printf("<<<------result----->>>\n%s\n", packet.buf);
             break;
+        case REP_CHECK: {
+            char *slave_io_running;
+            char *slave_sql_running;
+
+            char *token = strtok(packet.buf, " ");
+
+            // Left buf
+            if(token != NULL){
+                slave_io_running = token;
+                token = strtok(NULL, " "); // move next
+            }
+            // Right buf
+            if(token != NULL){
+                slave_sql_running = token;
+            }
+
+            printf("=======================================\n");
+            printf("\tSlave_IO_Running: %s\n", slave_io_running);
+            printf("\tSlave_SQL_Running: %s\n", slave_sql_running);
+			printf("=======================================\n\n");
+            break;
+        }
         case EVT_WARNING:
        		printf("[WARNING] %s\n", packet.buf);
             break;
