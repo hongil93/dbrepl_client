@@ -12,6 +12,8 @@
 
 #define SQL_SELECT 101
 #define REP_CHECK 201
+#define REP_ON 202
+#define REP_OFF 203
 #define EVT_WARNING 400
 #define EVT_ERROR 401
 
@@ -59,6 +61,8 @@ void menu() {
         printf("<Select menu>\n");
         printf("1. Select All\n");
         printf("2. show replication status\n");
+        printf("3. replication ON\n");
+        printf("4. replication OFF\n");
         printf("99. quit\n");
 
         printf("select number:");
@@ -96,8 +100,12 @@ void menu() {
                 sleep(1);
                 break;
             case 3:
+                send_packet(sock_info.fd, REP_ON, "\n");
+                sleep(1);
                 break;
             case 4:
+                send_packet(sock_info.fd, REP_OFF, "\n");
+                sleep(1);
                 break;
             case 99:
                 return;
@@ -219,6 +227,12 @@ void type_categorizer(Packet packet, int fd){
 			printf("=======================================\n\n");
             break;
         }
+        case REP_ON:
+			printf("<<<------result----->>>\n%s\n", packet.buf);
+            break;
+        case REP_OFF:
+			printf("<<<------result----->>>\n%s\n", packet.buf);
+            break;
         case EVT_WARNING:
        		printf("[WARNING] %s\n", packet.buf);
             break;
