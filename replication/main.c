@@ -10,6 +10,9 @@
 /*DEFINE*/
 #define BUF_SIZE 1024
 
+#define MAX_DB_STATUS 8
+#define MAX_LINE_LENGTH 40
+
 #define REP_CHECK 201
 #define EVT_WARNING 400
 #define EVT_ERROR 401
@@ -99,19 +102,19 @@ void *recv_thread(void *arg) {
         int total_received = 0;
         int remaining_data;
         
-        // Î®ºÏ†Ä Ìó§ÎçîÎ•º ÏàòÏã†
+        // ∏’¿˙ «Ï¥ı∏¶ ºˆΩ≈
         int str_len = recv(sock, &recv_msg.header, sizeof(recv_msg.header), 0);
         if (str_len <= 0) {
-            break;  // ÏÑúÎ≤ÑÍ∞Ä Ïó∞Í≤∞ÏùÑ Ï¢ÖÎ£åÌïòÍ±∞ÎÇò ÏóêÎü¨Í∞Ä Î∞úÏÉùÌïú Í≤ΩÏö∞
+            break;  // º≠πˆ∞° ø¨∞·¿ª ¡æ∑·«œ∞≈≥™ ø°∑Ø∞° πﬂª˝«— ∞ÊøÏ
         }
 
         remaining_data = recv_msg.header.length;
         
-        // Î©îÏãúÏßÄÍ∞Ä ÌÅ∞ Í≤ΩÏö∞ Ïó¨Îü¨ Î≤à recv Ìò∏Ï∂ú
+        // ∏ﬁΩ√¡ˆ∞° ≈´ ∞ÊøÏ ø©∑Ø π¯ recv »£√‚
         while (remaining_data > 0) {
             str_len = recv(sock, recv_msg.buf + total_received, remaining_data, 0);
             if (str_len <= 0) {
-                break;  // ÏÑúÎ≤ÑÍ∞Ä Ïó∞Í≤∞ÏùÑ Ï¢ÖÎ£åÌïòÍ±∞ÎÇò ÏóêÎü¨Í∞Ä Î∞úÏÉùÌïú Í≤ΩÏö∞
+                break;  // º≠πˆ∞° ø¨∞·¿ª ¡æ∑·«œ∞≈≥™ ø°∑Ø∞° πﬂª˝«— ∞ÊøÏ
             }
             total_received += str_len;
             remaining_data -= str_len;
@@ -141,69 +144,68 @@ void error_handling(char *message)
 	exit(1);
 }
 
-void type_categorizer(Packet packet, int fd){
-	if(packet.header.type == REP_CHECK){
-        char *slave_io_running;
-        char *slave_sql_running;
+/* Over line --> \n */
+void print_with_line_break(const char *label, const char *value) {
+    printf("\t  %s: ", label);
+    int len = strlen(value);
+    int start = 0;
 
-        char *Last_IO_Errno;
-        char *Last_IO_Error;
-        char *Last_SQL_Errno;
-        char *Last_SQL_Error;
-        char *replication_status;
-
-        char *token = strtok(packet.buf, ",");
-
-        // Left buf
-        if(token != NULL){
-            slave_io_running = token;
-            token = strtok(NULL, ","); // move next
-        }
-        // Right buf
-        if(token != NULL){
-            slave_sql_running = token;
-            token = strtok(NULL, ","); // move next
-        }
-
-        // Right buf
-        if(token != NULL){
-            Last_IO_Errno = token;
-            token = strtok(NULL, ","); // move next
-        }
-
-        if(token != NULL){
-            Last_IO_Error = token;
-            token = strtok(NULL, ","); // move next
-        }
-
-        if(token != NULL){
-            Last_SQL_Errno = token;
-            token = strtok(NULL, ","); // move next
-        }
-
-        if(token != NULL){
-            Last_SQL_Error = token;
-        }
-
-        if((strcmp(slave_io_running, "Yes") == 0) && (strcmp(slave_sql_running, "Yes") == 0))
-        {
-            replication_status = "Ï†ïÏÉÅ";
+    while (start < len) {
+        int to_print_length = (len - start > MAX_LINE_LENGTH) ? MAX_LINE_LENGTH : (len - start);
+        
+        if(to_print_length > 5){
+            printf("\n\t  %.*s\n", to_print_length, value + start);
         }else{
-            replication_status = "Ïã§Ìå®";
+            printf("%.*s\n", to_print_length, value + start);
         }
         
-        system("clear"); // screen clear
-        printf("=============DB Ïù¥Ï§ëÌôî ÏÉÅÌÉú=============\n");
-        printf("\t\t  %s\n", replication_status);
-        printf("================Ï†ÑÏ≤¥ ÏÉÅÌÉú===============\n");
-        printf("\tSlave_IO_Running: %s\n", slave_io_running);
-        printf("\tSlave_SQL_Running: %s\n", slave_sql_running);
-        printf("\tLast_IO_Errno: %s\n", Last_IO_Errno);
-        printf("\tLast_IO_Error: %s\n", Last_IO_Error);
-        printf("\tLast_SQL_Errno: %s\n", Last_SQL_Errno);
-        printf("\tLast_SQL_Error: %s\n", Last_SQL_Error);
-        printf("========================================\n\n");
+        start += to_print_length;
+    }
+}
 
-        fflush(stdout); // buffer
+/* print db01, db02 status */
+void print_db_status(const char *db_prefix, char *db_status[]){
+    printf("===================== %s status =====================\n", db_prefix);
+    printf("\t  Master_Log_File: %s\n", db_status[0]);
+    printf("\t  Read_Master_Log_Pos: %s\n", db_status[1]);
+    printf("\t  Slave_IO_Running: %s\n", db_status[2]);
+    printf("\t  Slave_SQL_Running: %s\n", db_status[3]);
+    printf("\t  Last_IO_Errno: %s\n", db_status[4]);
+    print_with_line_break("Last_IO_Error", db_status[5]);
+    printf("\t  Last_SQL_Errno: %s\n", db_status[6]);
+    print_with_line_break("Last_SQL_Error", db_status[7]);
+}
+
+
+void type_categorizer(Packet packet, int fd){
+	if(packet.header.type == REP_CHECK){
+        char *db_status[2] [MAX_DB_STATUS]; // db01, db02
+        char *token = strtok(packet.buf, ",");
+
+        /* read db01, db02 status */
+        for(int db = 0; db < 2; db++){
+            for(int i = 0; i < MAX_DB_STATUS; i++){
+                if(token != NULL){
+                    db_status[db][i] = token;
+                    token = strtok(NULL, ","); // next token
+                }
+            }
+        }
+        
+        /* db replication status */
+        const char *DB_replication_status =
+            (strcmp(db_status[0][2], "Yes") == 0) && (strcmp(db_status[0][3], "Yes") == 0)
+            && (strcmp(db_status[1][2], "Yes") == 0) && (strcmp(db_status[1][3], "Yes") == 0)?
+            "SUCCESS" : "FAIL";
+        
+
+        system("clear"); // screen clear
+        printf("==================== DB replication ===================\n");
+        printf("\t\t\t %s\n", DB_replication_status);
+
+        print_db_status("db01", db_status[0]);
+        print_db_status("db02", db_status[1]);
+        printf("=======================================================\n\n");
+        fflush(stdout); // buffer clear
     }
 }
