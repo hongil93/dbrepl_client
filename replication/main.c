@@ -10,7 +10,7 @@
 /*DEFINE*/
 #define BUF_SIZE 1024
 
-#define MAX_DB_STATUS 8
+#define MAX_DB_STATUS 12
 #define MAX_LINE_LENGTH 40
 
 #define REP_CHECK 201
@@ -102,19 +102,18 @@ void *recv_thread(void *arg) {
         int total_received = 0;
         int remaining_data;
         
-        // 먼저 헤더를 수신
         int str_len = recv(sock, &recv_msg.header, sizeof(recv_msg.header), 0);
         if (str_len <= 0) {
-            break;  // 서버가 연결을 종료하거나 에러가 발생한 경우
+            break;
         }
 
         remaining_data = recv_msg.header.length;
         
-        // 메시지가 큰 경우 여러 번 recv 호출
+        
         while (remaining_data > 0) {
             str_len = recv(sock, recv_msg.buf + total_received, remaining_data, 0);
             if (str_len <= 0) {
-                break;  // 서버가 연결을 종료하거나 에러가 발생한 경우
+                break;
             }
             total_received += str_len;
             remaining_data -= str_len;
@@ -175,7 +174,14 @@ void print_db_status(const char *db_prefix, char *db_status[]){
     printf("\t  Last_SQL_Errno: %s\n", db_status[6]);
     print_with_line_break("Last_SQL_Error", db_status[7]);
 }
-
+/* print db01, db02 "MASTER" status */
+void print_db_master_status(const char *db_prefix, char *db_status[]){
+    printf("===================== %s status =====================\n", db_prefix);
+    printf("\t  File: %s\n", db_status[8]);
+    printf("\t  Position: %s\n", db_status[9]);
+    printf("\t  Binlog_Do_DB: %s\n", db_status[10]);
+    printf("\t  Binlog_Ignore_DB: %s\n", db_status[11]);
+}
 
 void type_categorizer(Packet packet, int fd){
 	if(packet.header.type == REP_CHECK){
@@ -204,7 +210,9 @@ void type_categorizer(Packet packet, int fd){
         printf("\t\t\t %s\n", DB_replication_status);
 
         print_db_status("db01", db_status[0]);
+        print_db_master_status("db01", db_status[0]);
         print_db_status("db02", db_status[1]);
+        print_db_master_status("db02", db_status[1]);
         printf("=======================================================\n\n");
         fflush(stdout); // buffer clear
     }

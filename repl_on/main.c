@@ -44,15 +44,15 @@ void type_categorizer(Packet, int);
 int main()
 {
     pthread_t recv_thread_id, send_thread_id;
-    connect_to_server();
     
+    connect_to_server();
+
     /* create thread */
     pthread_create(&recv_thread_id, NULL, recv_thread, (void*)&sock_info.fd); // recive
     
     /* send */
     send_packet(sock_info.fd, REP_ON, "\n");
     sleep(1);
-
     pthread_join(recv_thread_id, NULL);
 	return 0;
 }
