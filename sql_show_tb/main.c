@@ -10,7 +10,7 @@
 /*DEFINE*/
 #define BUF_SIZE 1024
 
-#define SQL_SELECT 101
+#define SQL_SHOW_TB 103
 #define EVT_WARNING 400
 #define EVT_ERROR 401
 
@@ -52,8 +52,8 @@ int main()
     char send_buffer[1024];
 
     /* send */
-    snprintf(send_buffer, sizeof(send_buffer), "SELECT * FROM USER_TB");
-    send_packet(sock_info.fd, SQL_SELECT, send_buffer);
+    snprintf(send_buffer, sizeof(send_buffer), "");
+    send_packet(sock_info.fd, SQL_SHOW_TB, send_buffer);
     sleep(1);
 
     pthread_join(recv_thread_id, NULL);
@@ -138,11 +138,8 @@ void error_handling(char *message)
 }
 
 void type_categorizer(Packet packet, int fd){
-	if(packet.header.type == SQL_SELECT){
-        printf("\t     전체 데이터\n");
-        printf("=======================================\n");
+	if(packet.header.type == SQL_SHOW_TB){
         printf("%s", packet.buf);
-        printf("=======================================\n\n");
     }
 }
 
