@@ -81,7 +81,7 @@ int connect_to_server()
 	memset(&serv_adr, 0, sizeof(serv_adr));
 	serv_adr.sin_family=AF_INET;
 	serv_adr.sin_addr.s_addr=inet_addr("10.0.2.4");
-	serv_adr.sin_port=htons(9999);
+	serv_adr.sin_port=htons(8888);
 
 	if(connect(sock, (struct sockaddr*)&serv_adr, sizeof(serv_adr))==-1)
 		error_handling("connect() error!");
