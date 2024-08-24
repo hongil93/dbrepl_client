@@ -8,7 +8,7 @@
 #include <unistd.h>
 
 /*DEFINE*/
-#define BUF_SIZE 1024
+#define BUF_SIZE 2048
 #define INPUT_SIZE 100
 
 #define SQL_SHOW_TB 103
@@ -53,12 +53,12 @@ int main()
     /* create thread */
     pthread_create(&recv_thread_id, NULL, recv_thread, (void*)&sock_info.fd); // recive
         
-    char send_buffer[1024];
+    char send_buffer[2048];
 	while (1) {
         int num;
         char input[INPUT_SIZE];
 
-        printf("<Select menu>\n");
+        printf("\n<Select menu>\n");
         printf("1. All SHOW TABLE\n");
         printf("2. TABLE SHOW LIST\n");
         printf("3. Delete data\n");
@@ -87,10 +87,21 @@ int main()
 
 		switch (num) {
             char input_tbname[254];
-            char input_column[254];
-            char input_coldata[254];
-            char input_deldata1[254];
-            char input_deldata2[254];
+            char input_deletecol[254];
+            char input_deletedata[254];
+            
+            char table_name[254];
+            char SYS_ID_STR[254];
+            char SYS_NAME[254];
+            char IN_OUT_STR[254];
+            char NE_TYPE_STR[254];
+            char IP_VERSION_STR[254];
+            char SYS_ADDR[254];
+            char SYS_PORT_STR[254];
+            char OP_CODE_STR[254];
+            char OP_NAME[254];
+            char DESCRIPTION[254];
+            char F_CHECK_STR[254];
 
             case 1:
                 snprintf(send_buffer, sizeof(send_buffer), "");
@@ -109,11 +120,11 @@ int main()
                 printf("Delete table name: ");
                 scanf("%s", &input_tbname);
                 printf("Column name: ");
-                scanf("%s", &input_column);
+                scanf("%s", &input_deletecol);
                 printf("Column data: ");
-                scanf("%s", &input_coldata);
+                scanf("%s", &input_deletedata);
                 
-                snprintf(send_buffer, sizeof(send_buffer), "%s %s %s", input_tbname, input_column, input_coldata);
+                snprintf(send_buffer, sizeof(send_buffer), "%s %s %s", input_tbname, input_deletecol, input_deletedata);
                 send_packet(sock_info.fd, SQL_SHOW_TB_DEL, send_buffer);
                 sleep(1);
                 clear_input_buffer();
@@ -121,12 +132,11 @@ int main()
             case 4:
                 printf("Insert table name: ");
                 scanf("%s", &input_tbname);
-                printf("Column int data1: ");
-                scanf("%s", &input_deldata1);
-                printf("Column char data2: ");
-                scanf("%s", &input_deldata2);
-                
-                snprintf(send_buffer, sizeof(send_buffer), "%s %s %s", input_tbname, input_deldata1, input_deldata2);
+                printf("SYS_ID | SYS_NAME | IN_OUT | NE_TYPE | IP_VERSION | SYS_ADDR | SYS_PORT | OP_CODE | OP_NAME | DESCRIPTION | F_CHECK\nInput column data: ");
+                scanf("%s %s %s %s %s %s %s %s %s %s %s", &SYS_ID_STR, &SYS_NAME, &IN_OUT_STR, &NE_TYPE_STR, &IP_VERSION_STR, &SYS_ADDR,\
+                 &SYS_PORT_STR, &OP_CODE_STR, &OP_NAME, &DESCRIPTION, &F_CHECK_STR);
+                snprintf(send_buffer, sizeof(send_buffer), "%s %s %s %s %s %s %s %s %s %s %s %s", input_tbname, SYS_ID_STR, SYS_NAME, IN_OUT_STR, NE_TYPE_STR, IP_VERSION_STR, SYS_ADDR,\
+                SYS_PORT_STR, OP_CODE_STR, OP_NAME, DESCRIPTION, F_CHECK_STR);
                 send_packet(sock_info.fd, SQL_SHOW_TB_INT, send_buffer);
                 sleep(1);
                 clear_input_buffer();
