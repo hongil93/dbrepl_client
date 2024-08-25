@@ -11,12 +11,18 @@
 #define BUF_SIZE 2048
 #define INPUT_SIZE 100
 
-#define SQL_SHOW_TB 103
-#define SQL_SHOW_TB_LIST 104
-#define SQL_SHOW_TB_DEL 105
-#define SQL_SHOW_TB_INT 106
-#define EVT_WARNING 400
-#define EVT_ERROR 401
+#define REQ_CLSV_SQL_SHOWTB 10102101
+#define RES_CLSV_SQL_SHOWTB 20102101
+#define REQ_CLSV_SQL_SELECT 10102103
+#define RES_CLSV_SQL_SELECT 20102103
+#define REQ_CLSV_SQL_DELETE 10102104
+#define RES_CLSV_SQL_DELETE 20102104
+#define REQ_CLSV_SQL_INSERT 10102105
+#define RES_CLSV_SQL_INSERT 20102105
+#define REQ_SVCL_EVT_WARNING 10201400
+#define RES_SVCL_EVT_WARNING 20201400
+#define REQ_CLSV_EVT_ERROR 10102401
+#define RES_CLSV_EVT_ERROR 20102401
 
 /*STRUCT*/
 typedef struct _socket_info{
@@ -105,14 +111,14 @@ int main()
 
             case 1:
                 snprintf(send_buffer, sizeof(send_buffer), "");
-                send_packet(sock_info.fd, SQL_SHOW_TB, send_buffer);
+                send_packet(sock_info.fd, REQ_CLSV_SQL_SHOWTB, send_buffer);
                 sleep(1);
                 break;
             case 2:
                 printf("Input table name: ");
                 scanf("%s", &input_tbname);
                 snprintf(send_buffer, sizeof(send_buffer), input_tbname);
-                send_packet(sock_info.fd, SQL_SHOW_TB_LIST, send_buffer);
+                send_packet(sock_info.fd, REQ_CLSV_SQL_SELECT, send_buffer);
                 sleep(1);
                 clear_input_buffer();
                 break;
@@ -125,7 +131,7 @@ int main()
                 scanf("%s", &input_deletedata);
                 
                 snprintf(send_buffer, sizeof(send_buffer), "%s %s %s", input_tbname, input_deletecol, input_deletedata);
-                send_packet(sock_info.fd, SQL_SHOW_TB_DEL, send_buffer);
+                send_packet(sock_info.fd, REQ_CLSV_SQL_DELETE, send_buffer);
                 sleep(1);
                 clear_input_buffer();
                 break;
@@ -137,7 +143,7 @@ int main()
                  &SYS_PORT_STR, &OP_CODE_STR, &OP_NAME, &DESCRIPTION, &F_CHECK_STR);
                 snprintf(send_buffer, sizeof(send_buffer), "%s %s %s %s %s %s %s %s %s %s %s %s", input_tbname, SYS_ID_STR, SYS_NAME, IN_OUT_STR, NE_TYPE_STR, IP_VERSION_STR, SYS_ADDR,\
                 SYS_PORT_STR, OP_CODE_STR, OP_NAME, DESCRIPTION, F_CHECK_STR);
-                send_packet(sock_info.fd, SQL_SHOW_TB_INT, send_buffer);
+                send_packet(sock_info.fd, REQ_CLSV_SQL_INSERT, send_buffer);
                 sleep(1);
                 clear_input_buffer();
                 break;
@@ -179,7 +185,7 @@ int connect_to_server()
 	memset(&serv_adr, 0, sizeof(serv_adr));
 	serv_adr.sin_family=AF_INET;
 	serv_adr.sin_addr.s_addr=inet_addr("10.0.2.4");
-	serv_adr.sin_port=htons(8888);
+	serv_adr.sin_port=htons(1111);
 
 	if(connect(sock, (struct sockaddr*)&serv_adr, sizeof(serv_adr))==-1)
 		error_handling("connect() error!");
@@ -236,19 +242,19 @@ void type_categorizer(Packet packet, int fd){
 	
     switch (packet.header.type){
 
-    case SQL_SHOW_TB:
+    case RES_CLSV_SQL_SHOWTB:
         printf("%s", packet.buf);
         break;
-    case SQL_SHOW_TB_LIST:
+    case RES_CLSV_SQL_SELECT:
         printf("%s", packet.buf);
         break;
-    case SQL_SHOW_TB_DEL:
+    case RES_CLSV_SQL_DELETE:
         printf("%s", packet.buf);
         break;
-    case SQL_SHOW_TB_INT:
+    case RES_CLSV_SQL_INSERT:
         printf("%s", packet.buf);
         break;
-    case EVT_WARNING:
+    case RES_SVCL_EVT_WARNING:
        	printf("[WARNING] %s\n", packet.buf);
         break;
     default:

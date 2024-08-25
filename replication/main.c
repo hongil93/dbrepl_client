@@ -8,14 +8,15 @@
 #include <unistd.h>
 
 /*DEFINE*/
-#define BUF_SIZE 1024
+#define BUF_SIZE 2048
 
 #define MAX_DB_STATUS 12
 #define MAX_LINE_LENGTH 40
 
-#define REP_CHECK 201
-#define EVT_WARNING 400
-#define EVT_ERROR 401
+#define REQ_CLSV_REP_CHECK 10102201
+#define RES_CLSV_REP_CHECK 20102201
+#define REQ_SVCL_EVT_WARNING 10201400
+#define RES_SVCL_EVT_WARNING 20201400
 
 /*STRUCT*/
 typedef struct _socket_info{
@@ -83,7 +84,7 @@ int connect_to_server()
 	memset(&serv_adr, 0, sizeof(serv_adr));
 	serv_adr.sin_family=AF_INET;
 	serv_adr.sin_addr.s_addr=inet_addr("10.0.2.4");
-	serv_adr.sin_port=htons(8888);
+	serv_adr.sin_port=htons(1111);
 
 	if(connect(sock, (struct sockaddr*)&serv_adr, sizeof(serv_adr))==-1)
 		error_handling("connect() error!");
@@ -130,7 +131,7 @@ void *recv_thread(void *arg) {
 void *send_thread(void *arg){
     int sock = *((int *)arg);
     while(1){
-        send_packet(sock_info.fd, REP_CHECK, "\n");
+        send_packet(sock_info.fd, REQ_CLSV_REP_CHECK, "\n");
         sleep(5);
     }
     return NULL;
@@ -184,7 +185,7 @@ void error_handling(char *message)
 // }
 
 void type_categorizer(Packet packet, int fd){
-	if(packet.header.type == REP_CHECK){
+	if(packet.header.type == RES_CLSV_REP_CHECK){
         
         printf("%s", packet.buf);
 

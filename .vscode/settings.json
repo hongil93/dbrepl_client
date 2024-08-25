@@ -1,5 +1,9 @@
 {
     "files.associations": {
-        "socket.h": "c"
+        "*.erd": "json",
+        "*.vuerd": "json",
+        "socket.h": "c",
+        "unistd.h": "c",
+        "pthread.h": "c"
     }
 }
